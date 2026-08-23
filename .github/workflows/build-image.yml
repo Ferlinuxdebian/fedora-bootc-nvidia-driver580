@@ -80,3 +80,11 @@ jobs:
               "docker://${{ steps.meta.outputs.primary }}" \
               "docker://${BASE}:${TAG}"
           done
+
+      - name: Disparar build no repositório bootc-gnome-minimal
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GH_PAT_DISPATCH }}" \
+            https://api.github.com/repos/Ferlinuxdebian/bootc-gnome-minimal/dispatches \
+            -d '{"event_type": "nvidia-driver-updated", "client_payload": {"driver_image": "${{ steps.meta.outputs.primary }}"}}'
