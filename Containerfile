@@ -12,7 +12,7 @@ FROM quay.io/fedora/fedora-bootc:44 AS final
 # 1. Configuração de repostórios e instalação de Kernel Extras + NVIDIA
 COPY --from=builder /etc/yum.repos.d/fedora-nvidia-580.repo /etc/yum.repos.d/ 
 COPY --from=builder /var/cache/akmods/nvidia/kmod-nvidia*.rpm /tmp/nvidia/ 
-COPY 10-nvidia-args.toml nvidia-power.conf /tmp/sysconfig/ 
+COPY 10-nvidia-args.toml nvidia-power.conf nvidia_packages /tmp/sysconfig/ 
 RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dnf5 -y install --setopt=tsflags=nodocs "kernel-modules-extra-${kver}" && \
     dnf5 download --destdir=/tmp/nvidia nvidia-kmod-common nvidia-driver-cuda && \
@@ -20,6 +20,7 @@ RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" &
     rpm -vi --nodeps /tmp/nvidia/nvidia-driver-cuda*.rpm && \
     mv -v /tmp/sysconfig/10-nvidia-args.toml /usr/lib/bootc/kargs.d/10-nvidia-args.toml && \
     mv -v /tmp/sysconfig/nvidia-power.conf /etc/modprobe.d/ && \
+    grep -v '^#' /tmp/sysconfig/nvidia_packages | tr '\n' ' ' | xargs dnf5 install --setopt=tsflags=nodocs -y && \
     dnf5 -y install /tmp/nvidia/kmod-nvidia-*.rpm && \
     rm -rf /tmp/nvidia && \
     dnf5 clean all && \
