@@ -1,7 +1,7 @@
 name: Build e Push da Imagem Bootc
 on:
   schedule:
-  - cron: '0 10 * * *'
+  - cron: '15 14 * * *'
   push:
     branches:
       - main
