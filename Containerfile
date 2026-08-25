@@ -7,7 +7,7 @@ RUN echo "keepcache=true" >> /etc/dnf/dnf.conf
 RUN dnf5 upgrade kernel* --refresh & \
     KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dnf5 -y install "kernel-devel-${KERNEL_VERSION}" wget && \
-    wget -O /etc/yum.repos.d/fedora-nvidia-580.repo https://negativo17.org && \
+    wget -O /etc/yum.repos.d/fedora-nvidia-580.repo https://negativo17.org/repos/fedora-nvidia-580.repo && \
     dnf5 install -y nvidia-driver nvidia-driver-cuda && \
     akmods --force --kernels "$KERNEL_VERSION"
 
