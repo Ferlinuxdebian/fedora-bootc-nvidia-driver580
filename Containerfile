@@ -4,7 +4,8 @@ FROM quay.io/fedora/fedora-bootc:44 AS builder
 # Adiciona o parâmetro de cache diretamente no arquivo existente do DNF5
 RUN echo "keepcache=true" >> /etc/dnf/dnf.conf
 
-RUN KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
+RUN dnf5 upgrade kernel* --refresh & \
+    KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dnf5 -y install "kernel-devel-${KERNEL_VERSION}" wget && \
     wget -O /etc/yum.repos.d/fedora-nvidia-580.repo https://negativo17.org && \
     dnf5 install -y nvidia-driver nvidia-driver-cuda && \
@@ -21,7 +22,8 @@ COPY --from=builder /etc/yum.repos.d/fedora-nvidia-580.repo /etc/yum.repos.d/
 COPY --from=builder /var/cache/akmods/nvidia/kmod-nvidia*.rpm /tmp/nvidia/ 
 COPY 10-nvidia-args.toml nvidia-power.conf nvidia_packages /tmp/sysconfig/ 
 
-RUN kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
+RUN dnf5 upgrade kernel* --refresh && \
+    kver="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')" && \
     dnf5 -y install --setopt=tsflags=nodocs "kernel-modules-extra-${kver}" && \
     dnf5 download --destdir=/tmp/nvidia nvidia-kmod-common nvidia-driver-cuda && \
     rpm -vi --nodeps /tmp/nvidia/nvidia-kmod-common*.rpm && \
