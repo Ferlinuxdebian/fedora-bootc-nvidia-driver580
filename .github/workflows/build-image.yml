@@ -54,13 +54,13 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login \
             -u "${{ github.actor }}" --password-stdin "${{ env.REGISTRY }}"
 
-      # Adicionado o reaproveitamento e exportação de cache de camadas via registro remoto (:cache)
+      # Adicionado o reaproveitamento e exportação de cache de camadas via registro remoto
       - name: Build da imagem inicial (como root)
         run: |
           sudo podman build \
             --layers \
-            --cache-from="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache" \
-            --cache-to="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache" \
+            --cache-from="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --cache-to="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
             --skip-unused-stages=false \
             --security-opt label=disable \
             -t "localhost/bootc-raw:latest" \
