@@ -1,7 +1,7 @@
 name: Build e Push da Imagem Bootc
 on:
   schedule:
-    - cron: '32 7 * * *'
+  - cron: '32 7 * * *'
   push:
     branches:
       - main
@@ -25,17 +25,6 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # Ajusta o runner do GitHub para suportar melhor builds complexos de bootc
-      - name: Setup Bootc Runner (Bluefin)
-        uses: projectbluefin/actions/bootc-build/setup-runner@v1
-
-      # Restaura o cache dos arquivos RPM baixados pelo DNF
-      - name: Restaurar Cache DNF (Bluefin)
-        uses: projectbluefin/actions/bootc-build/dnf-cache@v1
-        with:
-          action: restore
-          cache-name: ${{ env.IMAGE_NAME }}
-
       - name: Gerar metadados do build
         id: meta
         run: |
@@ -54,13 +43,9 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login \
             -u "${{ github.actor }}" --password-stdin "${{ env.REGISTRY }}"
 
-      # Adicionado o reaproveitamento e exportação de cache de camadas via registro remoto
       - name: Build da imagem inicial (como root)
         run: |
           sudo podman build \
-            --layers \
-            --cache-from="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
-            --cache-to="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
             --skip-unused-stages=false \
             --security-opt label=disable \
             -t "localhost/bootc-raw:latest" \
@@ -103,11 +88,3 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GH_PAT_DISPATCH }}" \
             https://api.github.com/repos/Ferlinuxdebian/bootc-gnome-minimal/dispatches \
             -d '{"event_type": "nvidia-driver-updated", "client_payload": {"driver_image": "${{ steps.meta.outputs.primary }}"}}'
-
-      # Salva os novos pacotes RPM no cache do GitHub, mesmo se os passos anteriores falharem (always)
-      - name: Salvar Cache DNF (Bluefin)
-        if: always()
-        uses: projectbluefin/actions/bootc-build/dnf-cache@v1
-        with:
-          action: save
-          cache-name: ${{ env.IMAGE_NAME }}
